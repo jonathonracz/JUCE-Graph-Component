@@ -25,52 +25,51 @@ void GraphViewComponent::resized() {
 }
 
 
-NodeComponent* GraphViewComponent::addNode(const std::string& name,
-                                           const int ins,
-                                           const int outs,
-                                           const Point<float> position) {
+NodeComponent* GraphViewComponent::addNode(String name,
+                                           int ins,
+                                           int outs,
+                                           Point<float> position) {
     auto maxNumPins = std::max(ins, outs);
     auto w = (maxNumPins * theme.pinWidth) + ( (maxNumPins + 1) * theme.pinSpacing);
     
     auto model = graph->addNode(name, ins, outs);
     
-    auto node = std::make_unique<NodeComponent>(theme, model);
+    auto node = new NodeComponent(theme, model);
     node->setBounds(0, 0, w, theme.nodeHeight);
     node->translation = AffineTransform::translation(position);
     node->scale = AffineTransform::scale(theme.initialScaleFactor);
     node->setTransform(node->translation.followedBy(node->scale));
     node->addMouseListener(mouseListener.get(), true);
-    addAndMakeVisible(node.get());
-    
-    auto ptr = node.get();
-    nodes.push_back(std::move(node));
+    addAndMakeVisible(node);
+
+    nodes.add(node);
     
     assertions();
     
-    return ptr;
+    return node;
 }
 
 HostNodeComponent* GraphViewComponent::addHostNode(GraphNodeEditor* editor,
-                                                   const int ins,
-                                                   const int outs,
-                                                   const int width,
-                                                   const int height,
-                                                   const Point<float> position) {
+                                                   int ins,
+                                                   int outs,
+                                                   int width,
+                                                   int height,
+                                                   Point<float> position) {
     const auto model = graph->addNode("GraphNodeEditor", ins, outs);
-    auto node = std::make_unique<HostNodeComponent>(theme, model, editor);
+    auto node = new HostNodeComponent(theme, model, editor);
     node->setBounds(0, 0, width, height);
     node->translation = AffineTransform::translation(position);
     node->scale = AffineTransform::scale(theme.initialScaleFactor);
     node->setTransform(node->translation.followedBy(node->scale));
     node->addMouseListener(mouseListener.get(), true);
-    addAndMakeVisible(node.get());
+    addAndMakeVisible(node);
     
-    auto ptr = node.get();
-    nodes.push_back(std::move(node));
+    auto ptr = node;
+    nodes.add(node);
     
     assertions();
     
-    return ptr;
+    return node;
 }
 
 
@@ -79,9 +78,9 @@ void GraphViewComponent::removeNode(NodeComponent* n) {
     // we need to do this instead of directly erasing because we have to remove the corresponding UI component as well
     std::vector<EdgeComponent*> edgesToDelete;
     for (auto& e : edges) {
-        if (e.get()) {
+        if (e) {
             if ( (e->startPin && e->startPin->node == n) || (e->endPin && e->endPin->node == n)) {
-                edgesToDelete.push_back(e.get());
+                edgesToDelete.push_back(e);
             }
         }
     }
@@ -89,47 +88,36 @@ void GraphViewComponent::removeNode(NodeComponent* n) {
         removeEdge(e);
     }
     
-    
-    auto ref = std::find_if(std::begin(nodes), std::end(nodes), [&](auto& current) -> bool { return current.get() == n; });
-    
-    if (ref != nodes.end()) {
-        auto n = (*ref).get();
-        graph->removeNode(n->model);
-        removeChildComponent(n);
-        nodes.erase(ref);
-    }
+    graph->removeNode(n->model);
+    removeChildComponent(n);
+    nodes.removeObject(n);
     
     assertions();
     
 }
 
 EdgeComponent* GraphViewComponent::addEdge(NodeComponent::PinComponent* source, NodeComponent::PinComponent* target) {
+
     const auto model = graph->addEdge(source->model, target->model);
+    auto edge = new EdgeComponent(theme, source, target, model);
     
-    auto edge = std::make_unique<EdgeComponent>(theme, source, target, model);
-    
-    calculateEdgeBounds(edge.get());
+    calculateEdgeBounds(edge);
     edge->addMouseListener(mouseListener.get(), false);
-    addAndMakeVisible(edge.get());
+    addAndMakeVisible(edge);
     edge->toBack();
-    auto ptr = edge.get();
-    edges.push_back(std::move(edge));
+    edges.add(edge);
     
     assertions();
     
-    return ptr;
+    return edge;
 }
 
 void GraphViewComponent::removeEdge(EdgeComponent* e) {
     e->removeMouseListener(mouseListener.get());
-    auto ref = std::find_if(std::begin(edges), std::end(edges), [&](auto& current) -> bool { return current.get() == e; });
     
-    if (ref != edges.end()) {
-        auto e = (*ref).get();
-        graph->removeEdge(e->model);
-        removeChildComponent(e);
-        edges.erase(ref);
-    }
+    graph->removeEdge(e->model);
+    removeChildComponent(e);
+    edges.removeObject(e);
     
     assertions();
 }
@@ -195,7 +183,7 @@ void GraphViewComponent::drawConnector(NodeComponent::PinComponent* pin) {
 }
 
 bool GraphViewComponent::isLegalEdge(NodeComponent::PinComponent* start, NodeComponent::PinComponent* end) {
-    auto existing = find_if(std::begin(edges), std::end(edges), [&](auto& e) -> bool { return e->isConnecting(start, end); });
+    auto existing = std::find_if(std::begin(edges), std::end(edges), [&](auto& e) -> bool { return e->isConnecting(start, end); });
     return existing == std::end(edges) && start->model->pinType != end->model->pinType && start->node != end->node;
 }
 
@@ -206,7 +194,7 @@ void GraphViewComponent::nodeMouseDrag(NodeComponent* node, const MouseEvent& e)
     
     if (!e.mods.isShiftDown() && !nodeMultiSelectionOn) {
         for (auto& n : nodes) {
-            if (n.get() != node) {
+            if (n != node) {
                 n->selected = false;
                 n->repaint();
             }
@@ -218,7 +206,7 @@ void GraphViewComponent::nodeMouseDrag(NodeComponent* node, const MouseEvent& e)
     node->setTransform(node->scale.followedBy(node->translation.translated(offset * node->scaleFactor)));
     
     for (auto& n : nodes) {
-        if (n.get() == node || !(n->selected)) continue;
+        if (n == node || !(n->selected)) continue;
         
         // using node->scaleFactor here is not a mistake, we need to move according to the dragged node scale
         n->setTransform(n->scale.followedBy(n->translation.translated(offset * node->scaleFactor)));
@@ -226,7 +214,7 @@ void GraphViewComponent::nodeMouseDrag(NodeComponent* node, const MouseEvent& e)
     }
     
     for (auto& e : edges) {
-        calculateEdgeBounds(e.get());
+        calculateEdgeBounds(e);
         e->repaint();
     }
     
@@ -246,7 +234,7 @@ void GraphViewComponent::nodeMouseDown(NodeComponent* node, const MouseEvent& e)
     
     if (!e.mods.isShiftDown() && !nodeMultiSelectionOn) {
         for (auto& n : nodes) {
-            if (n.get() != node) {
+            if (n != node) {
                 n->selected = false;
                 n->repaint();
             }
@@ -281,7 +269,7 @@ void GraphViewComponent::edgeMouseDown(EdgeComponent* edge, const MouseEvent& e)
     if (!e.mods.isShiftDown() && !edgeMultiSelectionOn) {
         
         for (auto& e : edges) {
-            if (e.get() != edge) {
+            if (e != edge) {
                 e->selected = false;
                 e->repaint();
             }
@@ -333,7 +321,7 @@ void GraphViewComponent::edgeMouseUp(EdgeComponent* edge, const MouseEvent& e) {
 void GraphViewComponent::recordState() {
     
     for (auto& n : nodes) {
-        auto p = getLocalPoint(n.get(), Point<int>(0,0));
+        auto p = getLocalPoint(n, Point<int>(0, 0));
         n->translation = AffineTransform::translation(p);
         n->scale = AffineTransform::scale(n->scaleFactor);
     }
@@ -458,7 +446,7 @@ void GraphViewComponent::zoomIn() {
     }
     
     for (auto& e : edges) {
-        calculateEdgeBounds(e.get());
+        calculateEdgeBounds(e);
         e->repaint();
     }
 }
@@ -477,7 +465,7 @@ void GraphViewComponent::zoomOut() {
     }
     
     for (auto& e : edges) {
-        calculateEdgeBounds(e.get());
+        calculateEdgeBounds(e);
         e->repaint();
     }
 }
@@ -495,7 +483,7 @@ void GraphViewComponent::zoomToOrginalSize() {
     }
     
     for (auto& e : edges) {
-        calculateEdgeBounds(e.get());
+        calculateEdgeBounds(e);
         e->repaint();
     }
 }
@@ -506,7 +494,7 @@ void GraphViewComponent::removeSelected() {
     std::vector<EdgeComponent*> edgesToDelete;
     for (auto& e : edges) {
         if (e->selected) {
-            edgesToDelete.push_back(e.get());
+            edgesToDelete.push_back(e);
         }
     }
     for (auto& e: edgesToDelete) removeEdge(e);
@@ -516,7 +504,7 @@ void GraphViewComponent::removeSelected() {
     std::vector<NodeComponent*> nodesToDelete;
     for (auto& n : nodes) {
         if (n->selected) {
-            nodesToDelete.push_back(n.get());
+            nodesToDelete.push_back(n);
         }
     }
     for (auto& n: nodesToDelete) removeNode(n);
@@ -544,7 +532,7 @@ void GraphViewComponent::duplicate() {
     
     for (auto& n : nodes) {
         if (n->selected) {
-            nodesToAdd.push_back(std::tuple<NodeComponent*, int, int>(n.get(), n->ins.size(), n->outs.size()));
+            nodesToAdd.push_back(std::tuple<NodeComponent*, int, int>(n, n->ins.size(), n->outs.size()));
         }
     }
     

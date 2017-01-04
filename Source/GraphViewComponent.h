@@ -16,8 +16,8 @@ class GraphViewComponent : public Component {
 public:
     
     std::unique_ptr<Graph> graph;
-    std::vector<std::unique_ptr<NodeComponent>> nodes;
-    std::vector<std::unique_ptr<EdgeComponent>> edges;
+    OwnedArray<NodeComponent> nodes;
+    OwnedArray<EdgeComponent> edges;
     std::unique_ptr<SelectionComponent> selector;
     std::unique_ptr<UnboundEdgeComponent> edgeDrawer;
     
@@ -88,17 +88,17 @@ public:
     
     
     NodeComponent* addNode(
-                           const std::string& name,
-                           const int ins,
-                           const int outs,
-                           const Point<float> position = Point<float>(0,0));
+                           String name,
+                           int ins,
+                           int outs,
+                           Point<float> position = Point<float>(0,0));
     HostNodeComponent* addHostNode(
                                    GraphNodeEditor* editor,
-                                   const int ins,
-                                   const int outs,
-                                   const int width,
-                                   const int height,
-                                   const Point<float> position = Point<float>(0,0));
+                                   int ins,
+                                   int outs,
+                                   int width,
+                                   int height,
+                                   Point<float> position = Point<float>(0,0));
     void removeNode(NodeComponent* n);
     
     EdgeComponent* addEdge(NodeComponent::PinComponent* source, NodeComponent::PinComponent* target);

@@ -5,7 +5,7 @@
 #include "Graph.h"
 #include "GraphViewTheme.h"
 
-class NodeComponent : public Component, public Graph::NodeListener {
+class NodeComponent : public Component, public Graph::Node::Listener {
     
 public:
     
@@ -13,18 +13,18 @@ public:
         
     public:
         
-        const NodeComponent* node;
-        const Graph::Pin* model;
+        NodeComponent* node;
+        Graph::Pin* model;
         
         unsigned int cPinBackgroundCurrent;
         
-        PinComponent(const NodeComponent* node, const Graph::Pin* model) : node(node), model(model) {
+        PinComponent(NodeComponent* node, Graph::Pin* model) : node(node), model(model) {
             cPinBackgroundCurrent =  node->theme.cPinBackground;
         }
         
         void paint(Graphics& g) {
             Path p;
-            p.addRectangle(0, 0, node->theme.pinWidth, node->theme.pinHeight);
+            p.addRectangle(Rectangle<int>(0, 0, node->theme.pinWidth, node->theme.pinHeight));
             g.setColour(Colour(cPinBackgroundCurrent));
             g.fillPath(p);
         }
@@ -38,8 +38,8 @@ public:
     Graph::Node* model;
     
     
-    std::vector<std::unique_ptr<PinComponent>> ins;
-    std::vector<std::unique_ptr<PinComponent>> outs;
+    OwnedArray<PinComponent> ins;
+    OwnedArray<PinComponent> outs;
     
     bool selected;
     

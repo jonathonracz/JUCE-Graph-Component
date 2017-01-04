@@ -15,14 +15,11 @@ EdgeComponent::~EdgeComponent() {
 }
 
 bool EdgeComponent::hitTest(int x, int y) {
-    auto position = Point<float>(x, y);
+    auto position = Point<float>(static_cast<float>(x), static_cast<float>(y));
     Point<float> nearest;
-    path.getNearestPoint(Point<float>(x,y), nearest);
-    auto distance = position.getDistanceFrom(nearest);
-    return  distance < 5;
+    auto distance = path.getNearestPoint(position, nearest);
+    return distance < 5;
 }
-
-
 
 void EdgeComponent::paint(Graphics& g) {
     auto w = getWidth();

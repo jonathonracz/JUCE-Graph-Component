@@ -90,7 +90,7 @@ private:
 };
 
 
-struct OutListener : public Graph::NodeListener {
+struct OutListener : public Graph::Node::Listener {
     
     Graph::Node* outsideWorld;
     

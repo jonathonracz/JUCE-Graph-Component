@@ -11,17 +11,17 @@ UnboundEdgeComponent::UnboundEdgeComponent() {
 
 
 void UnboundEdgeComponent::paint(Graphics& g) {
-    auto w = getWidth();
-    auto h = getHeight();
+    auto w = static_cast<float>(getWidth());
+    auto h = static_cast<float>(getHeight());
     
-    Point<int> pstart, pend;
+    Point<float> pstart, pend;
     
     if (inverted) {
-        pstart = Point<int>(w,0);
-        pend = Point<int>(0,h);
+        pstart = Point<float>(w, 0.0f);
+        pend = Point<float>(0.0f, h);
     } else {
-        pstart = Point<int>(0,0);
-        pend = Point<int> (w,h);
+        pstart = Point<float>(0.0f, 0.0f);
+        pend = Point<float> (w, h);
     }
     
     Path path;

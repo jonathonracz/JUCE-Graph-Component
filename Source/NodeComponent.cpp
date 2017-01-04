@@ -10,13 +10,11 @@ NodeComponent::NodeComponent(const GraphViewTheme& theme, Graph::Node* model) : 
     cNodeBackgroundCurrent = theme.cNodeBackground;
     
     for(auto i = 0; i < model->ins.size(); i++) {
-        auto pin = std::make_unique<PinComponent>(this, model->ins[i].get());
-        ins.push_back(std::move(pin));
+        ins.add(new PinComponent(this, model->ins[i]));
     }
     
     for(auto i = 0; i < model->outs.size(); i++) {
-        auto pin = std::make_unique<PinComponent>(this, model->outs[i].get());
-        outs.push_back(std::move(pin));
+        outs.add(new PinComponent(this, model->outs[i]));
     }
     
     translation = AffineTransform::translation(0, 0);
@@ -77,7 +75,7 @@ void NodeComponent::resized() {
         auto h = theme.pinHeight;
         for (auto& p : ins) {
             p->setBounds(x, y, w, h);
-            addAndMakeVisible(p.get());
+            addAndMakeVisible(p);
             x += w + theme.pinSpacing;
         }
     }
@@ -89,7 +87,7 @@ void NodeComponent::resized() {
         auto h = theme.pinHeight;
         for (auto& p : outs) {
             p->setBounds(x, y, w, h);
-            addAndMakeVisible(p.get());
+            addAndMakeVisible(p);
             x += w + theme.pinSpacing;
         }
     }
@@ -148,20 +146,3 @@ void NodeComponent::mouseDoubleClick(const MouseEvent& e) {
     //model->flow(model->name);
     //model->graph->dfs(model, [&](const auto& n) -> void { printf("visiting %s\n", n->name.c_str()); } );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
